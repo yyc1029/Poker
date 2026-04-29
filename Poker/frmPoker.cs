@@ -449,8 +449,7 @@ namespace Poker
                 this.ShowCards();
             }
         }
+
         #endregion
-
-
     }
 }
