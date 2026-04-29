@@ -34,6 +34,11 @@ namespace Poker
         int totalFund = 1000000;
 
         /// <summary>
+        /// 起始資金，用來計算整局遊戲的盈虧
+        /// </summary>
+        const int initialFund = 1000000;
+
+        /// <summary>
         /// 玩家本局的押注金額（0 表示尚未下注）
         /// </summary>
         int betAmount = 0;
@@ -466,6 +471,70 @@ namespace Poker
 
                 this.ShowCards();
             }
+        }
+
+        /// <summary>
+        /// 重新開始遊戲：統計盈虧後詢問玩家確認，確認後重置所有狀態
+        /// </summary>
+        private void btnRestart_Click(object sender, EventArgs e)
+        {
+            int diff = totalFund - initialFund;
+            string summary = BuildSummary(diff);
+            string confirm = summary + "\n\n確定要重新開始嗎？";
+
+            DialogResult dr = MessageBox.Show(confirm, "重新開始", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (dr != DialogResult.Yes) return;
+
+            // 重置資金
+            totalFund = initialFund;
+            betAmount = 0;
+            lblTotalFund.Text = totalFund.ToString("N0");
+
+            // 重置押注區
+            txtBetAmount.Text = "";
+            txtBetAmount.Enabled = true;
+            btnBet.Enabled = true;
+
+            // 重置牌桌
+            lblResult.Text = "";
+            foreach (var p in pic)
+            {
+                p.Image = GetImage("back");
+                p.Tag = "back";
+                p.Enabled = false;
+            }
+
+            // 重置按鈕狀態
+            btnDealCard.Enabled = true;
+            btnChangeCard.Enabled = false;
+            btnCheck.Enabled = false;
+        }
+
+        /// <summary>
+        /// 結束遊戲：統計盈虧後詢問玩家確認，確認後關閉視窗
+        /// </summary>
+        private void btnOver_Click(object sender, EventArgs e)
+        {
+            int diff = totalFund - initialFund;
+            string summary = BuildSummary(diff);
+            string confirm = summary + "\n\n確定要結束遊戲嗎？";
+
+            DialogResult dr = MessageBox.Show(confirm, "結束遊戲", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (dr == DialogResult.Yes)
+                Application.Exit();
+        }
+
+        /// <summary>
+        /// 根據盈虧金額組合統計訊息字串
+        /// </summary>
+        private string BuildSummary(int diff)
+        {
+            if (diff > 0)
+                return $"本次遊戲共賺了 {diff:N0} 元 🎉\n起始資金：{initialFund:N0} 元　目前資金：{totalFund:N0} 元";
+            else if (diff < 0)
+                return $"本次遊戲共虧了 {Math.Abs(diff):N0} 元 😢\n起始資金：{initialFund:N0} 元　目前資金：{totalFund:N0} 元";
+            else
+                return $"本次遊戲不賺不虧，打平！\n起始資金：{initialFund:N0} 元　目前資金：{totalFund:N0} 元";
         }
 
         #endregion

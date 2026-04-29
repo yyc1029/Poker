@@ -182,18 +182,20 @@
             // 
             // btnRestart
             // 
-            this.btnRestart.Enabled = false;
+            
             this.btnRestart.Location = new System.Drawing.Point(335, 702);
             this.btnRestart.Margin = new System.Windows.Forms.Padding(6);
             this.btnRestart.Name = "btnRestart";
             this.btnRestart.Size = new System.Drawing.Size(178, 72);
             this.btnRestart.TabIndex = 4;
             this.btnRestart.Text = "重新開始";
+            this.btnRestart.UseMnemonic = false;
             this.btnRestart.UseVisualStyleBackColor = true;
+            this.btnRestart.Click += new System.EventHandler(this.btnRestart_Click);
             // 
             // btnOver
             // 
-            this.btnOver.Enabled = false;
+  
             this.btnOver.Location = new System.Drawing.Point(572, 702);
             this.btnOver.Margin = new System.Windows.Forms.Padding(6);
             this.btnOver.Name = "btnOver";
@@ -201,6 +203,7 @@
             this.btnOver.TabIndex = 4;
             this.btnOver.Text = "遊戲結束";
             this.btnOver.UseVisualStyleBackColor = true;
+            this.btnOver.Click += new System.EventHandler(this.btnOver_Click);
             // 
             // frmPoker
             // 
