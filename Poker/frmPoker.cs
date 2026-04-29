@@ -247,7 +247,7 @@ namespace Poker
         /// <summary>
         /// 當按下押注按鈕時，驗證押注金額並確認下注
         /// </summary>
-        private void btmBet_Click(object sender, EventArgs e)
+        private void btnBet_Click(object sender, EventArgs e)
         {
             // 驗證輸入是否為有效數字
             if (!int.TryParse(txtBetAmount.Text.Trim(), out int inputBet))
@@ -278,7 +278,7 @@ namespace Poker
 
             // 鎖定押注區，等判斷牌型結束後才能再次下注
             txtBetAmount.Enabled = false;
-            btmBet.Enabled = false;
+            btnBet.Enabled = false;
         }
 
         /// <summary>
@@ -394,7 +394,7 @@ namespace Poker
                     lblTotalFund.Text = "0";
                     MessageBox.Show("你已經破產了！遊戲結束。", "Game Over", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     btnDealCard.Enabled = false;
-                    btmBet.Enabled = false;
+                    btnBet.Enabled = false;
                 }
             }
 
@@ -402,7 +402,7 @@ namespace Poker
             betAmount = 0;
             txtBetAmount.Text = "";
             txtBetAmount.Enabled = true;
-            btmBet.Enabled = true;
+            btnBet.Enabled = true;
         }
 
         /// <summary>
