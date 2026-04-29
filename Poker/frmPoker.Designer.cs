@@ -70,7 +70,7 @@
             this.grpButton.Name = "grpButton";
             this.grpButton.Padding = new System.Windows.Forms.Padding(6);
             this.grpButton.Size = new System.Drawing.Size(1051, 160);
-            this.grpButton.TabIndex = 1;
+            this.grpButton.TabIndex = 2;
             this.grpButton.TabStop = false;
             this.grpButton.Text = "功能";
             // 
@@ -90,6 +90,7 @@
             this.btnCheck.Location = new System.Drawing.Point(355, 56);
             this.btnCheck.Margin = new System.Windows.Forms.Padding(6);
             this.btnCheck.Name = "btnCheck";
+            this.btnCheck.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.btnCheck.Size = new System.Drawing.Size(178, 72);
             this.btnCheck.TabIndex = 2;
             this.btnCheck.Text = "判斷牌型";
@@ -130,7 +131,7 @@
             this.groupBet.Location = new System.Drawing.Point(26, 354);
             this.groupBet.Name = "groupBet";
             this.groupBet.Size = new System.Drawing.Size(1051, 167);
-            this.groupBet.TabIndex = 2;
+            this.groupBet.TabIndex = 1;
             this.groupBet.TabStop = false;
             this.groupBet.Text = "下注";
             // 
@@ -139,7 +140,7 @@
             this.btnBet.Location = new System.Drawing.Point(878, 69);
             this.btnBet.Name = "btnBet";
             this.btnBet.Size = new System.Drawing.Size(138, 63);
-            this.btnBet.TabIndex = 7;
+            this.btnBet.TabIndex = 1;
             this.btnBet.Text = "押注";
             this.btnBet.UseVisualStyleBackColor = true;
             this.btnBet.Click += new System.EventHandler(this.btnBet_Click);
@@ -150,7 +151,8 @@
             this.txtBetAmount.Multiline = true;
             this.txtBetAmount.Name = "txtBetAmount";
             this.txtBetAmount.Size = new System.Drawing.Size(261, 69);
-            this.txtBetAmount.TabIndex = 6;
+            this.txtBetAmount.TabIndex = 0;
+            this.txtBetAmount.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
             // lblBetAmount
             // 
@@ -168,7 +170,7 @@
             this.lblTotalFund.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.lblTotalFund.Name = "lblTotalFund";
             this.lblTotalFund.Size = new System.Drawing.Size(245, 67);
-            this.lblTotalFund.TabIndex = 4;
+            this.lblTotalFund.TabIndex = 0;
             this.lblTotalFund.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // lblTotal
@@ -182,12 +184,13 @@
             // 
             // btnRestart
             // 
-            
+            this.btnRestart.Font = new System.Drawing.Font("微軟正黑體", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
             this.btnRestart.Location = new System.Drawing.Point(335, 702);
             this.btnRestart.Margin = new System.Windows.Forms.Padding(6);
             this.btnRestart.Name = "btnRestart";
             this.btnRestart.Size = new System.Drawing.Size(178, 72);
-            this.btnRestart.TabIndex = 4;
+            this.btnRestart.TabIndex = 6;
+            this.btnRestart.TabStop = false;
             this.btnRestart.Text = "重新開始";
             this.btnRestart.UseMnemonic = false;
             this.btnRestart.UseVisualStyleBackColor = true;
@@ -195,12 +198,13 @@
             // 
             // btnOver
             // 
-  
+            this.btnOver.Font = new System.Drawing.Font("微軟正黑體", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
             this.btnOver.Location = new System.Drawing.Point(572, 702);
             this.btnOver.Margin = new System.Windows.Forms.Padding(6);
             this.btnOver.Name = "btnOver";
             this.btnOver.Size = new System.Drawing.Size(178, 72);
-            this.btnOver.TabIndex = 4;
+            this.btnOver.TabIndex = 7;
+            this.btnOver.TabStop = false;
             this.btnOver.Text = "遊戲結束";
             this.btnOver.UseVisualStyleBackColor = true;
             this.btnOver.Click += new System.EventHandler(this.btnOver_Click);

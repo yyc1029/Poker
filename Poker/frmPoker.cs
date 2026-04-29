@@ -247,6 +247,7 @@ namespace Poker
 
             this.btnChangeCard.Enabled = false;
             this.btnCheck.Enabled = true;
+            this.btnCheck.Focus();
         }
 
         /// <summary>
