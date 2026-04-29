@@ -176,6 +176,7 @@
             this.btmBet.TabIndex = 7;
             this.btmBet.Text = "押注";
             this.btmBet.UseVisualStyleBackColor = true;
+            this.btmBet.Click += new System.EventHandler(this.btmBet_Click); // ← 補上事件綁定
             // 
             // frmPoker
             // 

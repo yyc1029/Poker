@@ -28,13 +28,26 @@ namespace Poker
         /// </summary>
         int[] playerPoker = new int[5];
 
+        /// <summary>
+        /// 玩家目前的總資金
+        /// </summary>
+        int totalFund = 1000000;
+
+        /// <summary>
+        /// 玩家本局的押注金額（0 表示尚未下注）
+        /// </summary>
+        int betAmount = 0;
+
         #endregion
 
         public frmPoker()
         {
-
             InitializeComponent();
             InitializePoker();
+
+            // 顯示歡迎訊息並初始化總資金顯示
+            MessageBox.Show($"歡迎來到 Poker！\n你的起始資金為 {totalFund:N0} 元", "歡迎", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            lblTotalFund.Text = totalFund.ToString("N0");
         }
 
 
@@ -110,6 +123,25 @@ namespace Poker
             }
         }
 
+        /// <summary>
+        /// 根據牌型名稱回傳對應的賠率倍數
+        /// </summary>
+        /// <param name="handName">牌型名稱（包含在 result 字串中）</param>
+        /// <returns>賠率倍數，0 表示沒有中獎</returns>
+        private int GetOdds(string handName)
+        {
+            if (handName.Contains("同花大順")) return 250;
+            if (handName.Contains("同花順")) return 50;
+            if (handName.Contains("鐵支")) return 25;
+            if (handName.Contains("葫蘆")) return 9;
+            if (handName.Contains("同花")) return 6;
+            if (handName.Contains("順子")) return 4;
+            if (handName.Contains("三條")) return 3;
+            if (handName.Contains("兩對")) return 2;
+            if (handName.Contains("一對")) return 1;
+            return 0; // 雜牌
+        }
+
         #endregion
 
 
@@ -118,15 +150,11 @@ namespace Poker
         /// <summary>
         /// 牌桌上的牌被按下時，顯示訊息框告訴使用者按下了哪一張牌
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void Pic_Click(object sender, EventArgs e)
         {
             PictureBox pic = sender as PictureBox;
 
-
             int index = int.Parse(pic.Name.Replace("pic", ""));
-
             int cardNum = playerPoker[index] + 1;
 
             // 如果牌面朝下，則翻開牌面；如果牌面朝上，則翻回背面
@@ -145,14 +173,10 @@ namespace Poker
         /// <summary>
         /// 當按下發牌按鈕時，隨機產生五個1~52的數字，並將對應的圖片顯示在牌桌上
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-
         private async void btnDealCard_Click(object sender, EventArgs e)
         {
             // 將上一把玩的結果清除
             this.lblResult.Text = "";
-
 
             // 將牌桌上的牌重置為背面圖
             for (int i = 0; i < pic.Length; i++)
@@ -175,18 +199,8 @@ namespace Poker
             // 發前五張牌給玩家，並將對應的牌面圖顯示在牌桌上
             for (int i = 0; i < playerPoker.Length; i++)
             {
-                // 取前52張牌的前五張牌
                 playerPoker[i] = allPoker[i];
             }
-
-
-            //// 測試用
-            //playerPoker[0] = 51;
-            //playerPoker[1] = 47;
-            //playerPoker[2] = 43;
-            //playerPoker[3] = 39;
-            //playerPoker[4] = 3;
-
 
             // 將對應的牌面圖顯示在牌桌上
             this.ShowCards();
@@ -194,112 +208,101 @@ namespace Poker
             // 啟用所有牌的點擊事件
             for (int i = 0; i < pic.Length; i++)
             {
-                // 將牌桌上的牌設成可以點擊
                 pic[i].Enabled = true;
-                // 將牌桌上的牌的 Tag 設成 "front"，表示牌面朝上
                 pic[i].Tag = "front";
             }
 
             // 啟用換牌按鈕
             btnChangeCard.Enabled = true;
             btnDealCard.Enabled = false;
-
         }
 
         /// <summary>
         /// 當按下換牌按鈕時，將玩家手牌中被選中的牌換成新的牌，並將對應的圖片顯示在牌桌上
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void btnChangeCard_Click(object sender, EventArgs e)
         {
-            int startIndex = 5; // 從 allPoker 陣列的第 5 張牌開始換牌，因為前 5 張牌已經發給玩家了
+            int startIndex = 5;
 
-            for(int i = 0; i < playerPoker.Length; i++)
+            for (int i = 0; i < playerPoker.Length; i++)
             {
-                // 如果牌面朝下，表示玩家選擇換掉這張牌
                 if (pic[i].Tag.ToString() == "back")
                 {
-                    // 將玩家手牌中被選中的牌換成新的牌
                     playerPoker[i] = allPoker[startIndex];
-                    // 將對應的牌面圖顯示在牌桌上
                     pic[i].Image = GetImage(playerPoker[i] + 1);
                     pic[i].Tag = "front";
-
                     startIndex++;
                 }
             }
 
-            for(int i = 0; i < pic.Length; i++)
+            for (int i = 0; i < pic.Length; i++)
             {
-                // 將牌桌上的牌設成不可點擊
                 pic[i].Enabled = false;
             }
 
-            // 將換牌按鈕設成不可用，表示玩家已經完成換牌了
             this.btnChangeCard.Enabled = false;
-
-            // 將判斷牌型的按鈕設成可用，表示玩家可以開始判斷牌型了
             this.btnCheck.Enabled = true;
+        }
+
+        /// <summary>
+        /// 當按下押注按鈕時，驗證押注金額並確認下注
+        /// </summary>
+        private void btmBet_Click(object sender, EventArgs e)
+        {
+            // 驗證輸入是否為有效數字
+            if (!int.TryParse(txtBetAmount.Text.Trim(), out int inputBet))
+            {
+                MessageBox.Show("請輸入有效的押注金額（整數）！", "輸入錯誤", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                txtBetAmount.Focus();
+                return;
+            }
+
+            // 驗證範圍：0 < betAmount <= totalFund
+            if (inputBet <= 0)
+            {
+                MessageBox.Show("押注金額必須大於 0！", "輸入錯誤", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                txtBetAmount.Focus();
+                return;
+            }
+
+            if (inputBet > totalFund)
+            {
+                MessageBox.Show($"押注金額不可超過總資金 {totalFund:N0} 元！", "輸入錯誤", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                txtBetAmount.Focus();
+                return;
+            }
+
+            // 儲存押注金額
+            betAmount = inputBet;
+            MessageBox.Show($"押注成功！本局押注金額為 {betAmount:N0} 元，祝你好運！", "押注成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         /// <summary>
         /// 當按下判斷牌型按鈕時，根據玩家手牌的編號，判斷玩家的牌型，並顯示在 lblResult 上
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void btnCheck_Click(object sender, EventArgs e)
         {
             string[] colorList = { "梅花", "方塊", "愛心", "黑桃" };
             string[] pointList = { "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K" };
 
-
-            // 計錄目前五張撲克牌的花色的陣列
             int[] pokerColor = new int[5];
-            // 計錄目前五張撲克牌的點數的陣列
             int[] pokerPoint = new int[5];
-
 
             for (int i = 0; i < playerPoker.Length; i++)
             {
-                // 根據玩家手牌的編號，計算出玩家手牌的花色 
                 pokerColor[i] = playerPoker[i] % 4;
-                // 根據玩家手牌的編號，計算出玩家手牌的點數
                 pokerPoint[i] = playerPoker[i] / 4;
             }
 
-            #region 測試計算出來的花色和點數是否正確
-            //=================================================
-            //string result = "";
-            //for (int i = 0; i < playerPoker.Length; i++)
-            //{
-            //    // 取得花色編號
-            //    int iColor = pokerColor[i];
-            //    // 取得點數編號
-            //    int iPoint = pokerPoint[i];
-            //    // 根據花色編號和點數編號，組合成牌的名稱
-            //    result += $"{colorList[iColor]}{pointList[iPoint]} ";
-            //}
-            //// 顯示玩家撲克牌的花色和點數
-            //this.lblResult.Text = result;
-            //=================================================
-            #endregion
-
-            // 記錄花色和點數出現次數的陣列
             int[] colorCount = new int[4];
             int[] pointCount = new int[13];
 
-            // 統計 color 和 point 出現次數
             for (int i = 0; i < pokerColor.Length; i++)
             {
-                int color = pokerColor[i];
-                int point = pokerPoint[i];
-
-                colorCount[color]++;
-                pointCount[point]++;
+                colorCount[pokerColor[i]]++;
+                pointCount[pokerPoint[i]]++;
             }
 
-            // 將 colorCount 和 colorList 兩個陣列一起排序，根據 colorCount 的值從小到大排序，並且保持 colorList 的對應關係
             Array.Sort(colorCount, colorList);
             Array.Reverse(colorCount);
             Array.Reverse(colorList);
@@ -308,91 +311,102 @@ namespace Poker
             Array.Reverse(pointCount);
             Array.Reverse(pointList);
 
-
-            // 判斷是否為同花
             bool isFlush = (colorCount[0] == 5);
-            // 判斷是否為五張單張
             bool isSingle = (pointCount[0] == 1 && pointCount[1] == 1 && pointCount[2] == 1 && pointCount[3] == 1 && pointCount[4] == 1);
-            // 判斷是否為差四
-            bool isDiffFout = (pokerPoint.Max() - pokerPoint.Min() == 4);
-            // 判斷是否為大順
+            bool isDiffFour = (pokerPoint.Max() - pokerPoint.Min() == 4);
             bool isRoyal = pokerPoint.Contains(0) && pokerPoint.Contains(9) && pokerPoint.Contains(10) && pokerPoint.Contains(11) && pokerPoint.Contains(12);
-            // 判斷是否為同花大順
-            bool isRoyalisFlush = isFlush && isRoyal;
-            // 判斷是否為同花順
-            bool isStraightFlush = isFlush && isSingle && isDiffFout;
-            // 判斷是否為順子
-            bool isStraight = isSingle && (isDiffFout || isRoyal);
-            // 判斷是否為鐵支
+            bool isRoyalFlush = isFlush && isRoyal;
+            bool isStraightFlush = isFlush && isSingle && isDiffFour;
+            bool isStraight = isSingle && (isDiffFour || isRoyal);
             bool isFourOfAKind = (pointCount[0] == 4);
-            // 判斷是否為葫蘆
             bool isFullHouse = (pointCount[0] == 3 && pointCount[1] == 2);
-            // 判斷是否為三條
             bool isThreeOfAKind = (pointCount[0] == 3 && pointCount[1] == 1);
-            // 判斷是否為兩對
             bool isTwoPair = (pointCount[0] == 2 && pointCount[1] == 2);
-            // 判斷是否為一對
             bool isOnePair = (pointCount[0] == 2 && pointCount[1] == 1);
 
             string result = "";
 
-            if (isRoyalisFlush)
-            {
+            if (isRoyalFlush)
                 result = $"{colorList[0]} 同花大順";
-            }
             else if (isStraightFlush)
-            {
                 result = $"{colorList[0]} 同花順";
-            }
             else if (isStraight)
-            {
                 result = "順子";
-            }
             else if (isFourOfAKind)
-            {
                 result = $"{pointList[0]} 鐵支";
-            }
             else if (isFullHouse)
-            {
                 result = $"{pointList[0]}三張{pointList[1]}兩張 葫蘆";
-            }
             else if (isFlush)
-            {
                 result = $"{colorList[0]} 同花";
-            }
             else if (isThreeOfAKind)
-            {
                 result = $"{pointList[0]} 三條";
-            }
             else if (isTwoPair)
-            {
                 result = $"{pointList[0]},{pointList[1]} 兩對";
-            }
             else if (isOnePair)
-            {
                 result = $"{pointList[0]} 一對";
-            }
             else
-            {
                 result = "雜牌";
-            }
+
             lblResult.Text = result;
             btnChangeCard.Enabled = false;
             btnCheck.Enabled = false;
-
             btnDealCard.Enabled = true;
+
+            // ── 計算賠率與結算 ──────────────────────────────────────
+            // 若玩家本局沒有下注，跳過結算
+            if (betAmount <= 0)
+            {
+                betAmount = 0;
+                return;
+            }
+
+            int odds = GetOdds(result);
+
+            if (odds > 0)
+            {
+                // 有賺錢：贏得 betAmount * odds 元
+                int winAmount = betAmount * odds;
+                totalFund += winAmount;
+                lblTotalFund.Text = totalFund.ToString("N0");
+
+                MessageBox.Show(
+                    $"恭喜你！\n本次押注金額為 {betAmount:N0} 元\n根據牌型「{result}」（賠率 x{odds}）\n賺到 {winAmount:N0} 元\n目前總資金為 {totalFund:N0} 元",
+                    "恭喜獲勝 🎉", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            else
+            {
+                // 沒有中獎：扣除押注金額
+                totalFund -= betAmount;
+                lblTotalFund.Text = totalFund.ToString("N0");
+
+                MessageBox.Show(
+                    $"好可惜，差一點點就下注成功了！\n本次押注金額為 {betAmount:N0} 元\n根據牌型「{result}」\n損失 {betAmount:N0} 元\n目前總資金為 {totalFund:N0} 元",
+                    "很可惜 😢", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+
+                // 若資金歸零，提示玩家
+                if (totalFund <= 0)
+                {
+                    totalFund = 0;
+                    lblTotalFund.Text = "0";
+                    MessageBox.Show("你已經破產了！遊戲結束。", "Game Over", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    btnDealCard.Enabled = false;
+                    btmBet.Enabled = false;
+                }
+            }
+
+            // 每局結束後重置押注金額，要求玩家重新下注
+            betAmount = 0;
+            txtBetAmount.Text = "";
         }
 
         /// <summary>
-        /// 當表單被按下鍵盤時觸發
+        /// 當表單被按下鍵盤時觸發（測試用快捷鍵）
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void frmPoker_KeyPress(object sender, KeyPressEventArgs e)
         {
             if (this.btnDealCard.Enabled == false)
             {
-                switch(e.KeyChar)
+                switch (e.KeyChar)
                 {
                     case 'q':
                         // 同花大順
@@ -401,7 +415,6 @@ namespace Poker
                         playerPoker[2] = 43;
                         playerPoker[3] = 39;
                         playerPoker[4] = 3;
-
                         break;
                     case 'w':
                         // 同花順
@@ -445,7 +458,6 @@ namespace Poker
                         break;
                 }
 
-                // 顯示五張撲克牌到桌面上
                 this.ShowCards();
             }
         }
