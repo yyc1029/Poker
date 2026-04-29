@@ -275,6 +275,10 @@ namespace Poker
             // 儲存押注金額
             betAmount = inputBet;
             MessageBox.Show($"押注成功！本局押注金額為 {betAmount:N0} 元，祝你好運！", "押注成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+            // 鎖定押注區，等判斷牌型結束後才能再次下注
+            txtBetAmount.Enabled = false;
+            btmBet.Enabled = false;
         }
 
         /// <summary>
@@ -394,9 +398,11 @@ namespace Poker
                 }
             }
 
-            // 每局結束後重置押注金額，要求玩家重新下注
+            // 每局結束後重置押注金額，解鎖押注區讓玩家重新下注
             betAmount = 0;
             txtBetAmount.Text = "";
+            txtBetAmount.Enabled = true;
+            btmBet.Enabled = true;
         }
 
         /// <summary>
