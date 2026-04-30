@@ -42,6 +42,7 @@
             this.lblTotal = new System.Windows.Forms.Label();
             this.btnRestart = new System.Windows.Forms.Button();
             this.btnOver = new System.Windows.Forms.Button();
+            this.btnStatics = new System.Windows.Forms.Button();
             this.grpButton.SuspendLayout();
             this.groupBet.SuspendLayout();
             this.SuspendLayout();
@@ -147,10 +148,9 @@
             // 
             // txtBetAmount
             // 
-            this.txtBetAmount.Location = new System.Drawing.Point(585, 65);
-            this.txtBetAmount.Multiline = true;
+            this.txtBetAmount.Location = new System.Drawing.Point(585, 72);
             this.txtBetAmount.Name = "txtBetAmount";
-            this.txtBetAmount.Size = new System.Drawing.Size(261, 69);
+            this.txtBetAmount.Size = new System.Drawing.Size(261, 50);
             this.txtBetAmount.TabIndex = 0;
             this.txtBetAmount.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
@@ -185,7 +185,7 @@
             // btnRestart
             // 
             this.btnRestart.Font = new System.Drawing.Font("微軟正黑體", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.btnRestart.Location = new System.Drawing.Point(335, 702);
+            this.btnRestart.Location = new System.Drawing.Point(467, 702);
             this.btnRestart.Margin = new System.Windows.Forms.Padding(6);
             this.btnRestart.Name = "btnRestart";
             this.btnRestart.Size = new System.Drawing.Size(178, 72);
@@ -199,7 +199,7 @@
             // btnOver
             // 
             this.btnOver.Font = new System.Drawing.Font("微軟正黑體", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.btnOver.Location = new System.Drawing.Point(572, 702);
+            this.btnOver.Location = new System.Drawing.Point(704, 702);
             this.btnOver.Margin = new System.Windows.Forms.Padding(6);
             this.btnOver.Name = "btnOver";
             this.btnOver.Size = new System.Drawing.Size(178, 72);
@@ -209,11 +209,26 @@
             this.btnOver.UseVisualStyleBackColor = true;
             this.btnOver.Click += new System.EventHandler(this.btnOver_Click);
             // 
+            // btnStatics
+            // 
+            this.btnStatics.Font = new System.Drawing.Font("微軟正黑體", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+            this.btnStatics.Location = new System.Drawing.Point(230, 702);
+            this.btnStatics.Margin = new System.Windows.Forms.Padding(6);
+            this.btnStatics.Name = "btnStatics";
+            this.btnStatics.Size = new System.Drawing.Size(178, 72);
+            this.btnStatics.TabIndex = 8;
+            this.btnStatics.TabStop = false;
+            this.btnStatics.Text = "統計圖表";
+            this.btnStatics.UseMnemonic = false;
+            this.btnStatics.UseVisualStyleBackColor = true;
+            this.btnStatics.Click += new System.EventHandler(this.btnStatics_Click);
+            // 
             // frmPoker
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(13F, 24F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1116, 815);
+            this.Controls.Add(this.btnStatics);
             this.Controls.Add(this.btnOver);
             this.Controls.Add(this.btnRestart);
             this.Controls.Add(this.groupBet);
@@ -248,5 +263,6 @@
         private System.Windows.Forms.Button btnBet;
         private System.Windows.Forms.Button btnRestart;
         private System.Windows.Forms.Button btnOver;
+        private System.Windows.Forms.Button btnStatics;
     }
 }

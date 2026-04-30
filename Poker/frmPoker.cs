@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Windows.Forms.DataVisualization.Charting;
 
 namespace Poker
 {
@@ -43,6 +44,17 @@ namespace Poker
         /// </summary>
         int betAmount = 0;
 
+        /// <summary>
+        /// 每局結算紀錄（局數、牌型、押注金額、盈虧、結算後總資金）
+        /// </summary>
+        private List<(int round, string hand, int bet, int change, int fund)> history
+            = new List<(int, string, int, int, int)>();
+
+        /// <summary>
+        /// 累計局數
+        /// </summary>
+        private int roundCount = 0;
+
         #endregion
 
         public frmPoker()
@@ -67,15 +79,12 @@ namespace Poker
                 pic[i].SizeMode = PictureBoxSizeMode.AutoSize;
                 pic[i].Top = 30;
                 pic[i].Left = 10 + ((pic[i].Width + 10) * i);
-                // 預設牌桌上的牌不可點擊
                 pic[i].Enabled = false;
-                // 預設牌桌上的牌的 Tag 為 "back"，表示牌面朝下
                 pic[i].Tag = "back";
                 pic[i].Visible = true;
+                pic[i].TabStop = false;
 
-                // 將 pic 丟至到 grpPorker 內
                 this.grpPoker.Controls.Add(pic[i]);
-
                 pic[i].Click += Pic_Click;
             }
         }
@@ -91,12 +100,9 @@ namespace Poker
             }
         }
 
-
         /// <summary>
         /// 取得圖片資源
         /// </summary>
-        /// <param name="name">string 的牌名 </param>
-        /// <returns></returns>
         private Image GetImage(string name)
         {
             return Properties.Resources.ResourceManager.GetObject(name) as Image;
@@ -105,13 +111,10 @@ namespace Poker
         /// <summary>
         /// 取得圖片資源
         /// </summary>
-        /// <param name="num">撲克牌編號</param>
-        /// <returns></returns>
         private Image GetImage(int num)
         {
             return GetImage($"pic{num}");
         }
-
 
         /// <summary>
         /// 將 allPoker 陣列中的牌隨機打亂，模擬洗牌的過程
@@ -131,8 +134,6 @@ namespace Poker
         /// <summary>
         /// 根據牌型名稱回傳對應的賠率倍數
         /// </summary>
-        /// <param name="handName">牌型名稱（包含在 result 字串中）</param>
-        /// <returns>賠率倍數，0 表示沒有中獎</returns>
         private int GetOdds(string handName)
         {
             if (handName.Contains("同花大順")) return 250;
@@ -144,7 +145,20 @@ namespace Poker
             if (handName.Contains("三條")) return 3;
             if (handName.Contains("兩對")) return 2;
             if (handName.Contains("一對")) return 1;
-            return 0; // 雜牌
+            return 0;
+        }
+
+        /// <summary>
+        /// 根據盈虧金額組合統計訊息字串
+        /// </summary>
+        private string BuildSummary(int diff)
+        {
+            if (diff > 0)
+                return $"本次遊戲共賺了 {diff:N0} 元 🎉\n起始資金：{initialFund:N0} 元　目前資金：{totalFund:N0} 元";
+            else if (diff < 0)
+                return $"本次遊戲共虧了 {Math.Abs(diff):N0} 元 😢\n起始資金：{initialFund:N0} 元　目前資金：{totalFund:N0} 元";
+            else
+                return $"本次遊戲不賺不虧，打平！\n起始資金：{initialFund:N0} 元　目前資金：{totalFund:N0} 元";
         }
 
         #endregion
@@ -152,17 +166,12 @@ namespace Poker
 
         #region 事件處理程序
 
-        /// <summary>
-        /// 牌桌上的牌被按下時，顯示訊息框告訴使用者按下了哪一張牌
-        /// </summary>
         private void Pic_Click(object sender, EventArgs e)
         {
             PictureBox pic = sender as PictureBox;
-
             int index = int.Parse(pic.Name.Replace("pic", ""));
             int cardNum = playerPoker[index] + 1;
 
-            // 如果牌面朝下，則翻開牌面；如果牌面朝上，則翻回背面
             if (pic.Tag.ToString() == "back")
             {
                 pic.Tag = "front";
@@ -175,56 +184,35 @@ namespace Poker
             }
         }
 
-        /// <summary>
-        /// 當按下發牌按鈕時，隨機產生五個1~52的數字，並將對應的圖片顯示在牌桌上
-        /// </summary>
         private async void btnDealCard_Click(object sender, EventArgs e)
         {
-            // 將上一把玩的結果清除
             this.lblResult.Text = "";
 
-            // 將牌桌上的牌重置為背面圖
             for (int i = 0; i < pic.Length; i++)
-            {
                 pic[i].Image = GetImage("back");
-            }
 
-            // 將所有牌的編號從 0 到 51 填入 allPoker 陣列
             for (int i = 0; i < allPoker.Length; i++)
-            {
                 allPoker[i] = i;
-            }
 
-            // 洗牌
             this.Shuffle();
 
-            // 暫停500ms
             await Task.Delay(500);
 
-            // 發前五張牌給玩家，並將對應的牌面圖顯示在牌桌上
             for (int i = 0; i < playerPoker.Length; i++)
-            {
                 playerPoker[i] = allPoker[i];
-            }
 
-            // 將對應的牌面圖顯示在牌桌上
             this.ShowCards();
 
-            // 啟用所有牌的點擊事件
             for (int i = 0; i < pic.Length; i++)
             {
                 pic[i].Enabled = true;
                 pic[i].Tag = "front";
             }
 
-            // 啟用換牌按鈕
             btnChangeCard.Enabled = true;
             btnDealCard.Enabled = false;
         }
 
-        /// <summary>
-        /// 當按下換牌按鈕時，將玩家手牌中被選中的牌換成新的牌，並將對應的圖片顯示在牌桌上
-        /// </summary>
         private void btnChangeCard_Click(object sender, EventArgs e)
         {
             int startIndex = 5;
@@ -241,21 +229,15 @@ namespace Poker
             }
 
             for (int i = 0; i < pic.Length; i++)
-            {
                 pic[i].Enabled = false;
-            }
 
             this.btnChangeCard.Enabled = false;
             this.btnCheck.Enabled = true;
             this.btnCheck.Focus();
         }
 
-        /// <summary>
-        /// 當按下押注按鈕時，驗證押注金額並確認下注
-        /// </summary>
         private void btnBet_Click(object sender, EventArgs e)
         {
-            // 驗證輸入是否為有效數字
             if (!int.TryParse(txtBetAmount.Text.Trim(), out int inputBet))
             {
                 MessageBox.Show("請輸入有效的押注金額（整數）！", "輸入錯誤", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -263,7 +245,6 @@ namespace Poker
                 return;
             }
 
-            // 驗證範圍：0 < betAmount <= totalFund
             if (inputBet <= 0)
             {
                 MessageBox.Show("押注金額必須大於 0！", "輸入錯誤", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -278,18 +259,13 @@ namespace Poker
                 return;
             }
 
-            // 儲存押注金額
             betAmount = inputBet;
             MessageBox.Show($"押注成功！本局押注金額為 {betAmount:N0} 元，祝你好運！", "押注成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-            // 鎖定押注區，等判斷牌型結束後才能再次下注
             txtBetAmount.Enabled = false;
             btnBet.Enabled = false;
         }
 
-        /// <summary>
-        /// 當按下判斷牌型按鈕時，根據玩家手牌的編號，判斷玩家的牌型，並顯示在 lblResult 上
-        /// </summary>
         private void btnCheck_Click(object sender, EventArgs e)
         {
             string[] colorList = { "梅花", "方塊", "愛心", "黑桃" };
@@ -336,26 +312,16 @@ namespace Poker
 
             string result = "";
 
-            if (isRoyalFlush)
-                result = $"{colorList[0]} 同花大順";
-            else if (isStraightFlush)
-                result = $"{colorList[0]} 同花順";
-            else if (isStraight)
-                result = "順子";
-            else if (isFourOfAKind)
-                result = $"{pointList[0]} 鐵支";
-            else if (isFullHouse)
-                result = $"{pointList[0]}三張{pointList[1]}兩張 葫蘆";
-            else if (isFlush)
-                result = $"{colorList[0]} 同花";
-            else if (isThreeOfAKind)
-                result = $"{pointList[0]} 三條";
-            else if (isTwoPair)
-                result = $"{pointList[0]},{pointList[1]} 兩對";
-            else if (isOnePair)
-                result = $"{pointList[0]} 一對";
-            else
-                result = "雜牌";
+            if (isRoyalFlush) result = $"{colorList[0]} 同花大順";
+            else if (isStraightFlush) result = $"{colorList[0]} 同花順";
+            else if (isStraight) result = "順子";
+            else if (isFourOfAKind) result = $"{pointList[0]} 鐵支";
+            else if (isFullHouse) result = $"{pointList[0]}三張{pointList[1]}兩張 葫蘆";
+            else if (isFlush) result = $"{colorList[0]} 同花";
+            else if (isThreeOfAKind) result = $"{pointList[0]} 三條";
+            else if (isTwoPair) result = $"{pointList[0]},{pointList[1]} 兩對";
+            else if (isOnePair) result = $"{pointList[0]} 一對";
+            else result = "雜牌";
 
             lblResult.Text = result;
             btnChangeCard.Enabled = false;
@@ -363,37 +329,38 @@ namespace Poker
             btnDealCard.Enabled = true;
 
             // ── 計算賠率與結算 ──────────────────────────────────────
-            // 若玩家本局沒有下注，跳過結算
             if (betAmount <= 0)
             {
+                // 未下注，仍記錄本局（盈虧為 0）
+                roundCount++;
+                history.Add((roundCount, result, 0, 0, totalFund));
                 betAmount = 0;
                 return;
             }
 
             int odds = GetOdds(result);
+            int changeAmount;
 
             if (odds > 0)
             {
-                // 有賺錢：贏得 betAmount * odds 元
-                int winAmount = betAmount * odds;
-                totalFund += winAmount;
+                changeAmount = betAmount * odds;
+                totalFund += changeAmount;
                 lblTotalFund.Text = totalFund.ToString("N0");
 
                 MessageBox.Show(
-                    $"恭喜你！\n本次押注金額為 {betAmount:N0} 元\n根據牌型「{result}」（賠率 x{odds}）\n賺到 {winAmount:N0} 元\n目前總資金為 {totalFund:N0} 元",
+                    $"恭喜你！\n本次押注金額為 {betAmount:N0} 元\n根據牌型「{result}」（賠率 x{odds}）\n賺到 {changeAmount:N0} 元\n目前總資金為 {totalFund:N0} 元",
                     "恭喜獲勝 🎉", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             else
             {
-                // 沒有中獎：扣除押注金額
-                totalFund -= betAmount;
+                changeAmount = -betAmount;
+                totalFund += changeAmount;
                 lblTotalFund.Text = totalFund.ToString("N0");
 
                 MessageBox.Show(
                     $"好可惜，差一點點就下注成功了！\n本次押注金額為 {betAmount:N0} 元\n根據牌型「{result}」\n損失 {betAmount:N0} 元\n目前總資金為 {totalFund:N0} 元",
                     "很可惜 😢", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 
-                // 若資金歸零，提示玩家
                 if (totalFund <= 0)
                 {
                     totalFund = 0;
@@ -404,16 +371,17 @@ namespace Poker
                 }
             }
 
-            // 每局結束後重置押注金額，解鎖押注區讓玩家重新下注
+            // 寫入歷史紀錄
+            roundCount++;
+            history.Add((roundCount, result, betAmount, changeAmount, totalFund));
+
+            // 重置押注區
             betAmount = 0;
             txtBetAmount.Text = "";
             txtBetAmount.Enabled = true;
             btnBet.Enabled = true;
         }
 
-        /// <summary>
-        /// 當表單被按下鍵盤時觸發（測試用快捷鍵）
-        /// </summary>
         private void frmPoker_KeyPress(object sender, KeyPressEventArgs e)
         {
             if (this.btnDealCard.Enabled == false)
@@ -421,62 +389,34 @@ namespace Poker
                 switch (e.KeyChar)
                 {
                     case 'q':
-                        // 同花大順
-                        playerPoker[0] = 51;
-                        playerPoker[1] = 47;
-                        playerPoker[2] = 43;
-                        playerPoker[3] = 39;
-                        playerPoker[4] = 3;
+                        playerPoker[0] = 51; playerPoker[1] = 47;
+                        playerPoker[2] = 43; playerPoker[3] = 39; playerPoker[4] = 3;
                         break;
                     case 'w':
-                        // 同花順
-                        playerPoker[0] = 37;
-                        playerPoker[1] = 33;
-                        playerPoker[2] = 29;
-                        playerPoker[3] = 25;
-                        playerPoker[4] = 21;
+                        playerPoker[0] = 37; playerPoker[1] = 33;
+                        playerPoker[2] = 29; playerPoker[3] = 25; playerPoker[4] = 21;
                         break;
                     case 'e':
-                        // 同花
-                        playerPoker[0] = 50;
-                        playerPoker[1] = 38;
-                        playerPoker[2] = 34;
-                        playerPoker[3] = 22;
-                        playerPoker[4] = 18;
+                        playerPoker[0] = 50; playerPoker[1] = 38;
+                        playerPoker[2] = 34; playerPoker[3] = 22; playerPoker[4] = 18;
                         break;
                     case 'r':
-                        // 鐵支
-                        playerPoker[0] = 48;
-                        playerPoker[1] = 39;
-                        playerPoker[2] = 38;
-                        playerPoker[3] = 37;
-                        playerPoker[4] = 36;
+                        playerPoker[0] = 48; playerPoker[1] = 39;
+                        playerPoker[2] = 38; playerPoker[3] = 37; playerPoker[4] = 36;
                         break;
                     case 't':
-                        // 葫蘆
-                        playerPoker[0] = 30;
-                        playerPoker[1] = 29;
-                        playerPoker[2] = 6;
-                        playerPoker[3] = 5;
-                        playerPoker[4] = 4;
+                        playerPoker[0] = 30; playerPoker[1] = 29;
+                        playerPoker[2] = 6; playerPoker[3] = 5; playerPoker[4] = 4;
                         break;
                     case 'y':
-                        // 三條
-                        playerPoker[0] = 48;
-                        playerPoker[1] = 39;
-                        playerPoker[2] = 15;
-                        playerPoker[3] = 14;
-                        playerPoker[4] = 13;
+                        playerPoker[0] = 48; playerPoker[1] = 39;
+                        playerPoker[2] = 15; playerPoker[3] = 14; playerPoker[4] = 13;
                         break;
                 }
-
                 this.ShowCards();
             }
         }
 
-        /// <summary>
-        /// 重新開始遊戲：統計盈虧後詢問玩家確認，確認後重置所有狀態
-        /// </summary>
         private void btnRestart_Click(object sender, EventArgs e)
         {
             int diff = totalFund - initialFund;
@@ -486,9 +426,11 @@ namespace Poker
             DialogResult dr = MessageBox.Show(confirm, "重新開始", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             if (dr != DialogResult.Yes) return;
 
-            // 重置資金
+            // 重置資金與歷史紀錄
             totalFund = initialFund;
             betAmount = 0;
+            roundCount = 0;
+            history.Clear();
             lblTotalFund.Text = totalFund.ToString("N0");
 
             // 重置押注區
@@ -511,9 +453,6 @@ namespace Poker
             btnCheck.Enabled = false;
         }
 
-        /// <summary>
-        /// 結束遊戲：統計盈虧後詢問玩家確認，確認後關閉視窗
-        /// </summary>
         private void btnOver_Click(object sender, EventArgs e)
         {
             int diff = totalFund - initialFund;
@@ -525,17 +464,148 @@ namespace Poker
                 Application.Exit();
         }
 
-        /// <summary>
-        /// 根據盈虧金額組合統計訊息字串
-        /// </summary>
-        private string BuildSummary(int diff)
+        private void btnStatics_Click(object sender, EventArgs e)
         {
-            if (diff > 0)
-                return $"本次遊戲共賺了 {diff:N0} 元 🎉\n起始資金：{initialFund:N0} 元　目前資金：{totalFund:N0} 元";
-            else if (diff < 0)
-                return $"本次遊戲共虧了 {Math.Abs(diff):N0} 元 😢\n起始資金：{initialFund:N0} 元　目前資金：{totalFund:N0} 元";
-            else
-                return $"本次遊戲不賺不虧，打平！\n起始資金：{initialFund:N0} 元　目前資金：{totalFund:N0} 元";
+            if (history.Count == 0)
+            {
+                MessageBox.Show("目前還沒有任何遊玩紀錄！", "統計圖表", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            Form frmStats = new Form();
+            frmStats.Text = "遊玩統計";
+            frmStats.Size = new Size(900, 620);
+            frmStats.MinimumSize = new Size(700, 450);
+            frmStats.StartPosition = FormStartPosition.CenterParent;
+            frmStats.Font = new Font("微軟正黑體", 11F);
+
+            // ── 底部摘要 Label ──────────────────────────────────────
+            int totalChange = totalFund - initialFund;
+            int totalWin = history.Where(r => r.change > 0).Sum(r => r.change);
+            int totalLoss = history.Where(r => r.change < 0).Sum(r => Math.Abs(r.change));
+            int betRounds = history.Count(r => r.bet > 0);
+            string trendIcon = totalChange > 0 ? "🎉" : totalChange < 0 ? "😢" : "😐";
+            string changeSign = totalChange >= 0 ? $"+{totalChange:N0}" : $"{totalChange:N0}";
+
+            Label lblSummary = new Label();
+            lblSummary.Text = $"共 {history.Count} 局（下注 {betRounds} 局）　累計盈虧：{changeSign} 元 {trendIcon}　總贏：+{totalWin:N0}　總輸：-{totalLoss:N0}　目前總資金：{totalFund:N0} 元";
+            lblSummary.Dock = DockStyle.Bottom;
+            lblSummary.Height = 48;
+            lblSummary.TextAlign = ContentAlignment.MiddleCenter;
+            lblSummary.BackColor = Color.LightSteelBlue;
+            lblSummary.Font = new Font("微軟正黑體", 10F, FontStyle.Bold);
+
+            // ── TabControl ──────────────────────────────────────────
+            TabControl tab = new TabControl();
+            tab.Dock = DockStyle.Fill;
+            tab.Font = new Font("微軟正黑體", 11F);
+
+            // ── Tab 1：歷史紀錄表格 ─────────────────────────────────
+            TabPage tabTable = new TabPage("📋 歷史紀錄");
+
+            DataGridView dgv = new DataGridView();
+            dgv.Dock = DockStyle.Fill;
+            dgv.ReadOnly = true;
+            dgv.AllowUserToAddRows = false;
+            dgv.RowHeadersVisible = false;
+            dgv.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dgv.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dgv.EnableHeadersVisualStyles = false;
+            dgv.ColumnHeadersDefaultCellStyle.BackColor = Color.SteelBlue;
+            dgv.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
+            dgv.ColumnHeadersDefaultCellStyle.Font = new Font("微軟正黑體", 11F, FontStyle.Bold);
+            dgv.AlternatingRowsDefaultCellStyle.BackColor = Color.AliceBlue;
+
+            dgv.Columns.Add("round", "局數");
+            dgv.Columns.Add("hand", "牌型");
+            dgv.Columns.Add("bet", "押注金額");
+            dgv.Columns.Add("change", "盈虧");
+            dgv.Columns.Add("fund", "結算後總資金");
+
+            dgv.Columns["round"].FillWeight = 50;
+            dgv.Columns["bet"].FillWeight = 80;
+            dgv.Columns["change"].FillWeight = 80;
+
+            foreach (var r in history)
+            {
+                string betStr = r.bet == 0 ? "未下注" : $"{r.bet:N0}";
+                string changeStr = r.change > 0 ? $"+{r.change:N0}"
+                                 : r.change < 0 ? $"{r.change:N0}"
+                                 : "-";
+
+                int idx = dgv.Rows.Add($"第 {r.round} 局", r.hand, betStr, changeStr, $"{r.fund:N0}");
+
+                if (r.change > 0) dgv.Rows[idx].Cells["change"].Style.ForeColor = Color.Green;
+                else if (r.change < 0) dgv.Rows[idx].Cells["change"].Style.ForeColor = Color.Red;
+            }
+
+            tabTable.Controls.Add(dgv);
+
+            // ── Tab 2：資金走勢折線圖 ───────────────────────────────
+            TabPage tabChart = new TabPage("📈 資金走勢");
+
+            Chart chart = new Chart();
+            chart.Dock = DockStyle.Fill;
+            chart.BackColor = Color.WhiteSmoke;
+
+            ChartArea area = new ChartArea("main");
+            area.BackColor = Color.White;
+            area.AxisX.Title = "局數";
+            area.AxisY.Title = "總資金（元）";
+            area.AxisX.TitleFont = new Font("微軟正黑體", 10F);
+            area.AxisY.TitleFont = new Font("微軟正黑體", 10F);
+            area.AxisX.LabelStyle.Font = new Font("微軟正黑體", 9F);
+            area.AxisY.LabelStyle.Font = new Font("微軟正黑體", 9F);
+            area.AxisX.MajorGrid.LineColor = Color.LightGray;
+            area.AxisY.MajorGrid.LineColor = Color.LightGray;
+            area.AxisX.Interval = 1;
+            chart.ChartAreas.Add(area);
+
+            // 起始資金作為第 0 點
+            Series series = new Series("總資金");
+            series.ChartType = SeriesChartType.Line;
+            series.BorderWidth = 3;
+            series.Color = Color.SteelBlue;
+            series.MarkerStyle = MarkerStyle.Circle;
+            series.MarkerSize = 8;
+            series.MarkerColor = Color.SteelBlue;
+            series.IsValueShownAsLabel = true;
+            series.Font = new Font("微軟正黑體", 8F);
+            series.LabelForeColor = Color.DimGray;
+
+            // 基準線（起始資金）
+            Series baseline = new Series("起始資金");
+            baseline.ChartType = SeriesChartType.Line;
+            baseline.BorderWidth = 2;
+            baseline.Color = Color.LightCoral;
+            baseline.BorderDashStyle = ChartDashStyle.Dash;
+            baseline.IsVisibleInLegend = true;
+
+            // 加入起點（第 0 局）
+            series.Points.AddXY(0, initialFund);
+            baseline.Points.AddXY(0, initialFund);
+
+            foreach (var r in history)
+            {
+                series.Points.AddXY(r.round, r.fund);
+                baseline.Points.AddXY(r.round, initialFund);
+            }
+
+            Legend legend = new Legend();
+            legend.Font = new Font("微軟正黑體", 10F);
+            chart.Legends.Add(legend);
+
+            chart.Series.Add(series);
+            chart.Series.Add(baseline);
+
+            tabChart.Controls.Add(chart);
+
+            tab.TabPages.Add(tabTable);
+            tab.TabPages.Add(tabChart);
+
+            frmStats.Controls.Add(tab);
+            frmStats.Controls.Add(lblSummary);
+            frmStats.ShowDialog(this);
         }
 
         #endregion
